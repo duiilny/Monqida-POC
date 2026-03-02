@@ -1,5 +1,10 @@
 import streamlit as st
+import pandas as pd
+from datetime import datetime
 
+# Initialize history in session state
+if "history" not in st.session_state:
+    st.session_state.history = []
 st.title("Prediction Dashboard")
 
 product = st.selectbox("Product type", ["Tomato", "Strawberry", "Orange", "Olive"])
@@ -33,3 +38,30 @@ elif risk_level == "Medium":
     st.write("- Monitor closely\n- Prioritize rotation (FIFO)\n- Consider small markdown")
 else:
     st.write("- Normal rotation\n- Continue monitoring")
+
+# ---- Financial estimation ----
+baseline_shrink = 0.35
+relative_reduction = 0.12  # 12% pilot reduction
+new_shrink = baseline_shrink * (1 - relative_reduction)
+
+estimated_loss = price * baseline_shrink
+recovered_amount = price * (baseline_shrink - new_shrink)
+
+st.subheader("Financial Impact (POC)")
+st.write(f"Estimated baseline shrink: {baseline_shrink*100:.0f}%")
+st.write(f"Projected shrink after Monqida: {new_shrink*100:.1f}%")
+st.write(f"Recovered revenue per kg: {recovered_amount:.2f} MAD")
+st.write(f"Estimated baseline loss per kg: {estimated_loss:.2f} MAD")
+
+if st.button("Save Prediction"):
+    st.session_state.history.append({
+        "Time": datetime.now().strftime("%Y-%m-%d %H:%M")
+        "Product": product,
+        "Temp": temp,
+        "Humidity": hum,
+        "Days": days,
+        "Risk (%)": risk_pct,
+        "Risk Level": risk_level,
+        "Recovered MAD/kg": round(recovered_amount, 2)
+    })
+    st.success("Prediction saved.")
